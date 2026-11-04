@@ -1,0 +1,485 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Контур NoseR</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Контур R">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#101418">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
+<style>
+:root{--bg:#101418;--card:#181e25;--line:#2a333d;--text:#e8edf2;--dim:#8a97a5;--acc:#3ddc97;--acc2:#5cb8ff;--warn:#ffb454;--err:#ff6b6b;--input:#0d1115}
+@media (prefers-color-scheme: light){:root{--bg:#f1f3f5;--card:#fff;--line:#d5dbe1;--text:#14191f;--dim:#5b6773;--acc:#0a9e63;--acc2:#1769c9;--warn:#b86b00;--err:#c62828;--input:#f6f8fa}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--text);font:16px/1.35 -apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif;-webkit-text-size-adjust:100%}
+body{padding:env(safe-area-inset-top) 12px calc(env(safe-area-inset-bottom) + 24px)}
+main{max-width:560px;margin:0 auto}
+h1{font-size:20px;margin:14px 2px 2px}
+.sub{color:var(--dim);font-size:13px;margin:0 2px 12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px;margin-bottom:12px}
+.card h2{font-size:13px;letter-spacing:.04em;text-transform:uppercase;color:var(--dim);margin:0 0 10px;font-weight:600}
+.shapes{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.tools{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.opt{aspect-ratio:1;border:1.5px solid var(--line);background:var(--input);border-radius:12px;padding:6px;display:flex;align-items:center;justify-content:center;position:relative;color:var(--text)}
+.opt svg{width:100%;height:100%}
+.opt[aria-pressed=true]{border-color:var(--acc);box-shadow:0 0 0 2px color-mix(in srgb,var(--acc) 30%,transparent)}
+.opt[disabled]{opacity:.28}
+.opt i{position:absolute;top:3px;left:6px;font-style:normal;font-size:11px;color:var(--dim)}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.seg button{min-height:44px;border-radius:12px;border:1.5px solid var(--line);background:var(--input);color:var(--text);font:600 15px inherit}
+.seg button[aria-pressed=true]{border-color:var(--acc);color:var(--acc)}
+.seg button[disabled]{opacity:.3}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.f{display:flex;flex-direction:column;gap:4px}
+.f label{font-size:12px;color:var(--dim);display:flex;justify-content:space-between}
+.in{display:flex;border:1.5px solid var(--line);border-radius:12px;background:var(--input);overflow:hidden}
+.in:focus-within{border-color:var(--acc2)}
+.in input{flex:1;min-width:0;border:0;background:transparent;color:var(--text);font:600 18px/1 ui-monospace,SFMono-Regular,Menlo,monospace;padding:12px 10px;outline:0;width:100%}
+.in input.auto{color:var(--dim);font-weight:400}
+.in input::placeholder{color:var(--dim);opacity:.5}
+.in button{width:42px;border:0;border-left:1px solid var(--line);background:transparent;color:var(--dim);font:600 18px inherit}
+.pt{font-weight:700;color:var(--acc2)}
+.msg{border-radius:12px;padding:10px 12px;margin-bottom:12px;font-size:14px}
+.msg.err{background:color-mix(in srgb,var(--err) 16%,transparent);border:1px solid var(--err)}
+.msg.warn{background:color-mix(in srgb,var(--warn) 16%,transparent);border:1px solid var(--warn)}
+.res{width:100%;border-collapse:collapse;font:600 17px ui-monospace,SFMono-Regular,Menlo,monospace}
+.res td{padding:8px 4px;border-bottom:1px solid var(--line)}
+.res td:first-child{color:var(--acc2);width:44px;font-family:inherit}
+.res .r{color:var(--acc);text-align:right}
+pre{margin:0;background:var(--input);border:1px solid var(--line);border-radius:12px;padding:12px;font:600 16px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace;white-space:pre-wrap;overflow-x:auto}
+.row{display:flex;gap:8px;margin-top:10px}
+.row button,.btn{flex:1;min-height:44px;border-radius:12px;border:1.5px solid var(--line);background:var(--input);color:var(--text);font:600 15px inherit}
+.btn.main{background:var(--acc);border-color:var(--acc);color:#04130c}
+.btn.danger{color:var(--err)}
+svg.view{width:100%;height:auto;background:var(--input);border:1px solid var(--line);border-radius:12px;display:block}
+.legend{display:flex;gap:14px;font-size:12px;color:var(--dim);margin-top:8px;flex-wrap:wrap}
+.legend b{display:inline-block;width:18px;height:3px;vertical-align:middle;margin-right:5px;border-radius:2px}
+.note{font-size:12.5px;color:var(--dim);margin-top:8px}
+.hide{display:none}
+</style>
+</head>
+<body>
+<main>
+  <h1>Контур с радиусом при вершине</h1>
+  <p class="sub">Координаты воображаемой вершины резца без G41/G42. Работает без интернета.</p>
+
+  <div class="card"><h2>1 · Форма контура</h2><div class="shapes" id="shapes"></div>
+    <div class="seg"><button id="mC" aria-pressed="true">Фаска P1–P2</button><button id="mR" aria-pressed="false">Угол (A=90°)</button></div></div>
+
+  <div class="card"><h2>2 · Положение резца</h2><div class="tools" id="tools"></div>
+    <div class="note" id="toolNote"></div></div>
+
+  <div id="msgs"></div>
+
+  <div class="card"><h2>3 · Точки и радиусы</h2>
+    <div class="grid" id="fields"></div>
+    <div class="row"><button class="btn danger" id="clear">Очистить</button></div></div>
+
+  <div class="card hide" id="resCard"><h2>Результат</h2>
+    <table class="res" id="res"></table>
+    <h2 style="margin-top:14px">G-код</h2>
+    <pre id="gc"></pre>
+    <div class="row"><button id="dirBtn">P1 → P2</button><button class="btn main" id="copy">Копировать</button></div>
+    <div class="note">X в диаметре. Радиусы дуг уже с учётом NoseR. Перед запуском проверьте на пробной детали.</div></div>
+
+  <div class="card hide" id="viewCard"><h2>Контур и путь вершины</h2><div id="view"></div>
+    <div class="legend"><span><b style="background:#8a97a5"></b>контур детали</span><span><b style="background:var(--acc)"></b>путь вершины</span></div></div>
+</main>
+<script>
+/* Контурный калькулятор для токарного станка: компенсация радиуса при вершине резца.
+   Система координат: u = Z (вправо +), v = R = X/2 (вверх +). Вывод в X (диаметр) и Z.
+   Движок написан независимо, на геометрии: смещение контура на радиус вершины, скругления,
+   сдвиг в воображаемую вершину резца. */
+(function (root) {
+  'use strict';
+
+  // Формы: [P2far, P2, P1, P1far] в условных единицах (u, v), v вверх.
+  var SHAPES = {
+    1: [[-400, -200], [-200, -200], [200, 200], [200, 400]],
+    2: [[-200, -400], [-200, -200], [200, 200], [200, 400]],
+    3: [[-200, -400], [-200, -200], [200, 200], [400, 200]],
+    4: [[-400, -200], [-200, -200], [200, 200], [400, 200]],
+    5: [[-400, 200], [-200, 200], [200, -200], [200, -400]],
+    6: [[-400, 200], [-200, 200], [200, -200], [400, -200]],
+    7: [[-200, 400], [-200, 200], [200, -200], [400, -200]],
+    8: [[-200, 400], [-200, 200], [200, -200], [200, -400]]
+  };
+  // Угол резца (воображаемая вершина) относительно центра окружности носика: [du, dv] в долях r.
+  var TIP = { 1: [-1, -1], 2: [1, -1], 3: [1, 1], 4: [-1, 1] };
+  // Где воздух: для горизонтальных линий (+1 сверху / -1 снизу), для вертикальных (+1 справа / -1 слева).
+  var AIR = { 1: { h: 1, v: 1 }, 2: { h: 1, v: -1 }, 3: { h: -1, v: -1 }, 4: { h: -1, v: 1 } };
+
+  var EPS = 1e-9;
+  function unit(a, b) { var x = b[0] - a[0], y = b[1] - a[1], l = Math.hypot(x, y); return [x / l, y / l]; }
+  function leftN(t) { return [-t[1], t[0]]; }
+  function cross(a, b) { return a[0] * b[1] - a[1] * b[0]; }
+  function dot(a, b) { return a[0] * b[0] + a[1] * b[1]; }
+  function add(p, q, k) { return [p[0] + q[0] * (k === undefined ? 1 : k), p[1] + q[1] * (k === undefined ? 1 : k)]; }
+  function isHoriz(t) { return Math.abs(t[1]) < Math.abs(t[0]); }
+
+  function airSideFor(t, td) {
+    // s = +1: воздух слева от направления движения, -1: справа
+    var n = leftN(t);
+    if (isHoriz(t)) return (AIR[td].h * n[1]) > 0 ? 1 : -1;
+    return (AIR[td].v * n[0]) > 0 ? 1 : -1;
+  }
+
+  function lineIntersect(p1, t1, p2, t2) {
+    var d = cross(t1, t2);
+    if (Math.abs(d) < EPS) return null;
+    var w = [p2[0] - p1[0], p2[1] - p1[1]];
+    var k = cross(w, t2) / d;
+    return [p1[0] + t1[0] * k, p1[1] + t1[1] * k];
+  }
+
+  // Допустима ли пара «форма + направление резца» (воздух с одной стороны контура).
+  function comboValid(shape, td) {
+    var S = SHAPES[shape];
+    var t0 = unit(S[1], S[0]); t0 = [-t0[0], -t0[1]]; // движение P2far -> P2
+    var t2 = unit(S[2], S[3]);
+    return airSideFor(t0, td) === airSideFor(t2, td);
+  }
+
+  /* p: {shape, td, mode:'C'|'R', X1,Z1,X2,Z2, R1,R2 (необязательно), nose} */
+  function solve(p) {
+    var out = { ok: false, error: null, warnings: [] };
+    var S = SHAPES[p.shape];
+    if (!S || !TIP[p.td]) { out.error = 'Выберите форму и направление резца'; return out; }
+    var r = Number(p.nose);
+    if (!isFinite(r) || r < 0) { out.error = 'Радиус при вершине резца задан неверно'; return out; }
+    if (!comboValid(p.shape, p.td)) {
+      out.error = 'Для этой формы такое направление резца невозможно: по сторонам контура воздух с разных сторон.';
+      out.invalidCombo = true; return out;
+    }
+    var corner = p.mode === 'R';
+    var P2, P1;
+    if (corner) {
+      if (!isFinite(p.X2) || !isFinite(p.Z2)) { out.error = 'Введите X и Z вершины'; return out; }
+      P2 = P1 = [p.Z2, p.X2 / 2];
+    } else {
+      if (![p.X1, p.Z1, p.X2, p.Z2].every(isFinite)) { out.error = 'Введите X и Z для P1 и P2'; return out; }
+      P1 = [p.Z1, p.X1 / 2]; P2 = [p.Z2, p.X2 / 2];
+      if (Math.hypot(P1[0] - P2[0], P1[1] - P2[1]) < EPS) { out.error = 'P1 и P2 совпадают'; return out; }
+    }
+    var d2 = unit(S[1], S[0]), d1 = unit(S[2], S[3]);
+    var t0 = [-d2[0], -d2[1]];      // приход в P2
+    var t2 = d1;                    // уход от P1
+    var lines = [], verts = [];     // направления t и опорные точки
+    if (corner) {
+      lines = [{ t: t0, p: P2 }, { t: t2, p: P1 }];
+      verts = [{ i: 0, R: p.R2, label: 'corner' }];
+    } else {
+      var t1 = unit(P2, P1);
+      lines = [{ t: t0, p: P2 }, { t: t1, p: P2 }, { t: t2, p: P1 }];
+      verts = [{ i: 0, R: p.R2, label: 'P2' }, { i: 1, R: p.R1, label: 'P1' }];
+      // Предупреждение, если точки не соответствуют картинке формы
+      var sdu = Math.sign(S[2][0] - S[1][0]), sdv = Math.sign(S[2][1] - S[1][1]);
+      var du = P1[0] - P2[0], dv = P1[1] - P2[1];
+      if (Math.sign(du) !== sdu || Math.sign(dv) !== sdv)
+        out.warnings.push('Точки P1 и P2 расположены иначе, чем на рисунке выбранной формы. Проверьте знаки X и Z.');
+    }
+    var s = airSideFor(t0, p.td);
+    // Смещённые на r линии (центр носика идёт по ним)
+    lines.forEach(function (L) { var n = leftN(L.t); L.q = add(L.p, n, s * r); });
+
+    var tip = [TIP[p.td][0] * r, TIP[p.td][1] * r];
+    var nodes = []; // в порядке движения P2 -> P1
+    var arcs = [];
+    function pushNode(pt, label, arc) {
+      nodes.push({ u: pt[0] + tip[0], v: pt[1] + tip[1], label: label, arc: arc || null });
+    }
+    var centerPath = [];
+    for (var k = 0; k < verts.length; k++) {
+      var V = verts[k];
+      var Lin = lines[V.i], Lout = lines[V.i + 1];
+      var Vp = lineIntersect(Lin.q, Lin.t, Lout.q, Lout.t);
+      if (!Vp) { out.error = 'Линии контура параллельны, вершину построить нельзя'; return out; }
+      var R = Number(V.R);
+      var hasR = V.R !== undefined && V.R !== null && V.R !== '' && isFinite(R) && R > 0;
+      if (!hasR) {
+        pushNode(Vp, V.label, null);
+        continue;
+      }
+      var cr = cross(Lin.t, Lout.t);
+      var cside = cr > 0 ? 1 : -1;
+      var Reff = (cside === s) ? R - r : R + r;
+      if (Reff <= EPS) {
+        out.error = 'Радиус скругления ' + R + ' не больше радиуса при вершине ' + r + ': скругление невозможно'; return out;
+      }
+      var phi = Math.atan2(Math.abs(cr), dot(Lin.t, Lout.t));
+      var Ltan = Reff * Math.tan(phi / 2);
+      var Tin = add(Vp, Lin.t, -Ltan), Tout = add(Vp, Lout.t, Ltan);
+      var C = add(Tin, leftN(Lin.t), cside * Reff);
+      pushNode(Tin, V.label + 'a', null);
+      pushNode(Tout, V.label + 'b', { R: Reff, dir: cside > 0 ? 'G03' : 'G02', cu: C[0] + tip[0], cv: C[1] + tip[1] });
+    }
+    out.nodes = nodes.map(function (n) { return { label: n.label, X: 2 * n.v, Z: n.u, arc: n.arc }; });
+    out.ok = true;
+    out.airSide = s;
+    out.tip = tip;
+    out.contour = { P1: P1, P2: P2, S: S, mode: p.mode };
+    return out;
+  }
+
+  // Подписи точек, как в оригинале: P1 / C1,C2 / P2 / C3,C4
+  function labelNodes(res, mode) {
+    // Порядок движения P2 -> P1. Подписи по смыслу: сторона P1: P1 или C1,C2; сторона P2: P2 или C3,C4.
+    var ns = res.nodes;
+    var named = [];
+    ns.forEach(function (n) {
+      var l = n.label;
+      var out = { X: n.X, Z: n.Z, arc: n.arc, side: l.charAt(0) };
+      named.push(out);
+    });
+    return named;
+  }
+
+  function fmt(x) {
+    var v = Math.round(x * 10000) / 10000;
+    if (Object.is(v, -0) || v === 0) v = 0;
+    var s = String(v);
+    if (s.indexOf('.') < 0 && s.indexOf('e') < 0) s += '.0';
+    return s;
+  }
+
+  /* G-код. forward = true: от P1 к P2; false: от P2 к P1.
+     Внутренний порядок узлов от P2 к P1. */
+  function gcode(res, forward) {
+    var ns = res.nodes.slice();
+    var lines = [];
+    function rev(arcNode) { return arcNode.dir === 'G02' ? 'G03' : 'G02'; }
+    if (!forward) {
+      for (var i = 0; i < ns.length; i++) {
+        var n = ns[i];
+        if (n.arc) lines.push(n.arc.dir + '  X' + fmt(n.X) + '  Z' + fmt(n.Z) + '  R' + fmt(n.arc.R));
+        else lines.push('G01  X' + fmt(n.X) + '  Z' + fmt(n.Z));
+      }
+      return lines;
+    }
+    // Движение P1 -> P2: порядок узлов обратный, дуга приходит в начало прежней дуги
+    for (var j = ns.length - 1; j >= 0; j--) {
+      var m = ns[j];
+      if (m.arc) {
+        var startOfArc = ns[j - 1];
+        // в прямом порядке узел "a" (начало дуги) станет её концом
+        lines.push('G01  X' + fmt(m.X) + '  Z' + fmt(m.Z));
+        lines.push(rev(m.arc) + '  X' + fmt(startOfArc.X) + '  Z' + fmt(startOfArc.Z) + '  R' + fmt(m.arc.R));
+        j--; // пропускаем «a»
+      } else {
+        lines.push('G01  X' + fmt(m.X) + '  Z' + fmt(m.Z));
+      }
+    }
+    return lines;
+  }
+
+  var api = { SHAPES: SHAPES, TIP: TIP, AIR: AIR, solve: solve, gcode: gcode, comboValid: comboValid, fmt: fmt };
+  if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.LatheEngine = api;
+})(typeof self !== 'undefined' ? self : this);
+
+</script>
+<script>
+(function () {
+  'use strict';
+  var E = window.LatheEngine;
+  var $ = function (id) { return document.getElementById(id); };
+  var KEY = 'lathe-twin-v1';
+  var state = { shape: 1, td: 4, mode: 'C', dir: 'fwd', vals: {} };
+  try { var s = JSON.parse(localStorage.getItem(KEY) || 'null'); if (s && s.shape) state = Object.assign(state, s); } catch (e) {}
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} }
+
+  var SVGNS = 'http://www.w3.org/2000/svg';
+  // ---------- иконки ----------
+  function shapeIcon(n) {
+    var S = E.SHAPES[n], pts = [S[0], S[1], S[2], S[3]];
+    var pp = pts.map(function (p) { return [32 + p[0] / 16.5, 32 - p[1] / 16.5]; });
+    var d = 'M' + pp.map(function (p) { return p[0].toFixed(1) + ',' + p[1].toFixed(1); }).join(' L');
+    return '<svg viewBox="0 0 64 64"><path d="' + d + '" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  }
+  function toolIcon(td) {
+    var t = E.TIP[td], cx = 32, cy = 32, r = 8;
+    var tx = cx + t[0] * r, ty = cy - t[1] * r;     // положение вершины на экране
+    var dx = -t[0], dy = t[1];                         // от вершины к кругу (по осям)
+    var a = (tx + dx * 20) + ',' + ty, b = tx + ',' + (ty - dy * 20 * -1);
+    var l1 = 'M' + tx + ',' + ty + ' L' + (tx - t[0] * -1 * 0 + (-t[0]) * 22) + ',' + ty;
+    var l2 = 'M' + tx + ',' + ty + ' L' + tx + ',' + (ty + (t[1]) * 22);
+    return '<svg viewBox="0 0 64 64"><circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="none" stroke="currentColor" stroke-width="2.5"/>' +
+      '<path d="' + l1 + ' ' + l2 + '" fill="none" stroke="var(--acc)" stroke-width="3" stroke-linecap="round"/>' +
+      '<circle cx="' + tx + '" cy="' + ty + '" r="3" fill="var(--acc)"/></svg>';
+  }
+  function buildPickers() {
+    var sh = $('shapes'), i;
+    for (i = 1; i <= 8; i++) { var b = document.createElement('button'); b.className = 'opt'; b.dataset.n = i; b.innerHTML = '<i>' + i + '</i>' + shapeIcon(i); b.onclick = (function (n) { return function () { state.shape = n; fixCombo(); update(); }; })(i); sh.appendChild(b); }
+    var tl = $('tools');
+    [2, 1, 3, 4].forEach(function (n) { var b = document.createElement('button'); b.className = 'opt'; b.dataset.n = n; b.innerHTML = '<i>' + n + '</i>' + toolIcon(n); b.onclick = function () { state.td = n; update(); }; tl.appendChild(b); });
+  }
+  var TIPTXT = { 1: 'вершина слева-снизу', 2: 'вершина справа-снизу', 3: 'вершина справа-сверху', 4: 'вершина слева-сверху' };
+
+  function parallelShape(n) { var S = E.SHAPES[n], a = S[1][0] === S[0][0], b = S[2][0] === S[3][0]; return a === b; }
+  function fixCombo() {
+    if (!E.comboValid(state.shape, state.td)) {
+      for (var t = 1; t <= 4; t++) if (E.comboValid(state.shape, t)) { state.td = t; break; }
+    }
+    if (parallelShape(state.shape) && state.mode === 'R') state.mode = 'C';
+  }
+
+  // ---------- поля ----------
+  var FIELDS = {
+    C: [['X1', 'X1', 'P1'], ['Z1', 'Z1', 'P1'], ['X2', 'X2', 'P2'], ['Z2', 'Z2', 'P2'], ['I', 'I', ''], ['K', 'K', ''], ['A', 'A°', ''], ['NOSE', 'NoseR', ''], ['R1', 'R1', 'P1'], ['R2', 'R2', 'P2']],
+    R: [['X2', 'X вершины', ''], ['Z2', 'Z вершины', ''], ['R2', 'R скругления', ''], ['NOSE', 'NoseR', '']]
+  };
+  var inputs = {};
+  function buildFields() {
+    var host = $('fields'); host.innerHTML = ''; inputs = {};
+    FIELDS[state.mode].forEach(function (f) {
+      var d = document.createElement('div'); d.className = 'f';
+      d.innerHTML = '<label><span>' + (f[2] ? '<span class="pt">' + f[2] + '</span> ' : '') + f[1] + '</span></label><div class="in"><input inputmode="decimal" autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="next" placeholder="0"><button type="button" tabindex="-1" aria-label="сменить знак">±</button></div>';
+      var inp = d.querySelector('input'), sg = d.querySelector('button');
+      inp.value = state.vals[f[0]] || '';
+      inp.oninput = function () { var v = inp.value.replace(',', '.').replace(/[^0-9.\-]/g, ''); if (v !== inp.value) inp.value = v; state.vals[f[0]] = v; update(true); };
+      sg.onclick = function () { var v = inp.value; inp.value = v.charAt(0) === '-' ? v.slice(1) : '-' + (v || ''); state.vals[f[0]] = inp.value; update(true); inp.focus(); };
+      host.appendChild(d); inputs[f[0]] = inp;
+    });
+  }
+  function num(v) { if (v === undefined || v === null || v === '' || v === '-' || v === '.' ) return NaN; var x = parseFloat(v); return isFinite(x) ? x : NaN; }
+
+  // I/K/A: как в оригинале, угол A у форм 2, 3, 8 отсчитывается от оси X, у остальных от оси Z
+  function angleFromX(shape) { return shape === 2 || shape === 3 || shape === 8; }
+  function sgnX(shape) { return shape <= 4 ? 1 : -1; }
+  var RAD = Math.PI / 180;
+  function solveLinked(user) {
+    var v = {}, sg = sgnX(state.shape), ax = angleFromX(state.shape);
+    ['X1', 'Z1', 'X2', 'Z2', 'I', 'K', 'A'].forEach(function (k) { v[k] = num(user[k]); });
+    var known = function (k) { return isFinite(v[k]); };
+    var derived = {}, changed = true, guard = 0;
+    function set(k, val) { if (!known(k) && isFinite(val)) { v[k] = val; derived[k] = true; changed = true; } }
+    var toZ = function (a) { return ax ? 90 - a : a; };
+    while (changed && guard++ < 10) {
+      changed = false;
+      if (known('X1') && known('X2')) set('I', sg * (v.X1 - v.X2) / 2);
+      if (known('I') && known('X1')) set('X2', v.X1 - sg * 2 * v.I);
+      if (known('I') && known('X2')) set('X1', v.X2 + sg * 2 * v.I);
+      if (known('Z1') && known('Z2')) set('K', v.Z1 - v.Z2);
+      if (known('K') && known('Z1')) set('Z2', v.Z1 - v.K);
+      if (known('K') && known('Z2')) set('Z1', v.Z2 + v.K);
+      if (known('I') && known('K') && v.K !== 0) set('A', toZ(Math.atan(v.I / v.K) / RAD));
+      if (known('A') && known('K')) set('I', v.K * Math.tan(toZ(v.A) * RAD));
+      if (known('A') && known('I') && Math.tan(toZ(v.A) * RAD) !== 0) set('K', v.I / Math.tan(toZ(v.A) * RAD));
+    }
+    return { v: v, derived: derived };
+  }
+  var r4 = function (x) { return Math.round(x * 10000) / 10000; };
+
+  function msg(kind, text) { var d = document.createElement('div'); d.className = 'msg ' + kind; d.textContent = text; $('msgs').appendChild(d); }
+
+  function update(typing) {
+    fixCombo();
+    // выбор
+    Array.prototype.forEach.call($('shapes').children, function (b) { b.setAttribute('aria-pressed', String(+b.dataset.n === state.shape)); });
+    Array.prototype.forEach.call($('tools').children, function (b) {
+      var n = +b.dataset.n; b.setAttribute('aria-pressed', String(n === state.td)); b.disabled = !E.comboValid(state.shape, n);
+    });
+    $('toolNote').textContent = 'Положение ' + state.td + ': ' + TIPTXT[state.td] + '. Недоступные положения для этой формы затемнены: с ними контур невозможен.';
+    $('mC').setAttribute('aria-pressed', String(state.mode === 'C')); $('mR').setAttribute('aria-pressed', String(state.mode === 'R'));
+    $('mR').disabled = parallelShape(state.shape);
+    if (!typing && Object.keys(inputs).length !== FIELDS[state.mode].length || (!typing && inputs._mode !== state.mode)) { buildFields(); inputs._mode = state.mode; }
+    $('msgs').innerHTML = '';
+
+    var user = {}; Object.keys(state.vals).forEach(function (k) { user[k] = state.vals[k]; });
+    var P;
+    if (state.mode === 'C') {
+      var L = solveLinked(user);
+      FIELDS.C.forEach(function (f) { var k = f[0]; if (!inputs[k]) return;
+        if (['X1', 'Z1', 'X2', 'Z2', 'I', 'K', 'A'].indexOf(k) >= 0) {
+          var isUser = isFinite(num(user[k]));
+          if (!isUser && L.derived[k]) { inputs[k].value = String(r4(L.v[k])); inputs[k].classList.add('auto'); }
+          else { inputs[k].classList.remove('auto'); if (!isUser && document.activeElement !== inputs[k]) inputs[k].value = ''; }
+        } });
+      P = { X1: L.v.X1, Z1: L.v.Z1, X2: L.v.X2, Z2: L.v.Z2 };
+      var inc = ['I', 'K', 'A'].filter(function (k) { return isFinite(num(user[k])) && isFinite(L.v[k]) && L.derived[k] === undefined; });
+    } else {
+      P = { X2: num(user.X2), Z2: num(user.Z2) };
+    }
+    var nose = num(user.NOSE);
+    var R1 = num(user.R1), R2 = num(user.R2);
+    var ready = state.mode === 'C' ? [P.X1, P.Z1, P.X2, P.Z2].every(isFinite) : [P.X2, P.Z2].every(isFinite);
+    $('resCard').classList.add('hide'); $('viewCard').classList.add('hide');
+    if (!ready || !isFinite(nose)) { save(); return; }
+    var res = E.solve({ shape: state.shape, td: state.td, mode: state.mode, X1: P.X1, Z1: P.Z1, X2: P.X2, Z2: P.Z2, R1: isFinite(R1) && R1 > 0 ? R1 : null, R2: isFinite(R2) && R2 > 0 ? R2 : null, nose: nose });
+    (res.warnings || []).forEach(function (w) { msg('warn', w); });
+    if (!res.ok) { msg('err', res.error); save(); return; }
+    renderResult(res); save();
+  }
+
+  function renderResult(res) {
+    // подписи в прямом порядке P1 -> P2, как в оригинале
+    var rows = [], ns = res.nodes, k = 0;
+    var byLabel = {}; ns.forEach(function (n) { byLabel[n.label] = n; });
+    function pn(n, name, R) { rows.push({ name: name, X: n.X, Z: n.Z, R: R }); }
+    if (state.mode === 'C') {
+      if (byLabel.P1) pn(byLabel.P1, 'P1'); else { pn(byLabel.P1b, 'C1'); pn(byLabel.P1a, 'C2', byLabel.P1b.arc.R); }
+      if (byLabel.P2) pn(byLabel.P2, 'P2'); else { pn(byLabel.P2b, 'C3'); pn(byLabel.P2a, 'C4', byLabel.P2b.arc.R); }
+    } else {
+      if (byLabel.corner) pn(byLabel.corner, 'P'); else { pn(byLabel.cornerb, 'C3'); pn(byLabel.cornera, 'C4', byLabel.cornerb.arc.R); }
+    }
+    var t = $('res'); t.innerHTML = '';
+    rows.forEach(function (r) { var tr = document.createElement('tr'); tr.innerHTML = '<td>' + r.name + '</td><td>X' + E.fmt(r.X) + '&nbsp; Z' + E.fmt(r.Z) + '</td><td class="r">' + (r.R !== undefined ? 'R' + E.fmt(r.R) : '') + '</td>'; t.appendChild(tr); });
+    var fwd = state.dir === 'fwd';
+    $('dirBtn').textContent = fwd ? (state.mode === 'C' ? 'P1 → P2' : 'C3 → C4') : (state.mode === 'C' ? 'P2 → P1' : 'C4 → C3');
+    $('gc').textContent = E.gcode(res, !fwd ? false : true).join('\n');
+    $('resCard').classList.remove('hide');
+    drawView(res);
+  }
+
+  function drawView(res) {
+    var c = res.contour, S = c.S, P1 = c.P1, P2 = c.P2;
+    var d2 = unit(S[1], S[0]), d1 = unit(S[2], S[3]);
+    var span = Math.max(Math.hypot(P1[0] - P2[0], P1[1] - P2[1]), 4);
+    var ext = span * 0.3 + 1.5;
+    var A0 = [P2[0] + d2[0] * ext, P2[1] + d2[1] * ext], A1 = [P1[0] + d1[0] * ext, P1[1] + d1[1] * ext];
+    var contour = c.mode === 'R' ? [A0, P2, A1] : [A0, P2, P1, A1];
+    // путь вершины, продлённый по касательным не рисуем; рисуем только расчётные узлы
+    var ns = res.nodes.map(function (n) { return { u: n.Z, v: n.X / 2, arc: n.arc }; });
+    var all = contour.concat(ns.map(function (n) { return [n.u, n.v]; }));
+    var minU = Math.min.apply(null, all.map(function (p) { return p[0]; })), maxU = Math.max.apply(null, all.map(function (p) { return p[0]; }));
+    var minV = Math.min.apply(null, all.map(function (p) { return p[1]; })), maxV = Math.max.apply(null, all.map(function (p) { return p[1]; }));
+    var pad = Math.max(maxU - minU, maxV - minV) * 0.1 + 0.5;
+    var W = 360, H = 240, sc = Math.min((W - 24) / (maxU - minU + 2 * pad), (H - 24) / (maxV - minV + 2 * pad));
+    var ox = W / 2 - sc * (minU + maxU) / 2, oy = H / 2 + sc * (minV + maxV) / 2;
+    var X = function (u) { return (ox + sc * u).toFixed(1); }, Y = function (v) { return (oy - sc * v).toFixed(1); };
+    var pc = 'M' + contour.map(function (p) { return X(p[0]) + ',' + Y(p[1]); }).join(' L');
+    var tp = 'M' + X(ns[0].u) + ',' + Y(ns[0].v);
+    for (var i = 1; i < ns.length; i++) {
+      var n = ns[i];
+      if (n.arc) tp += ' A' + (n.arc.R * sc).toFixed(1) + ',' + (n.arc.R * sc).toFixed(1) + ' 0 0 ' + (n.arc.dir === 'G03' ? 0 : 1) + ' ' + X(n.u) + ',' + Y(n.v);
+      else tp += ' L' + X(n.u) + ',' + Y(n.v);
+    }
+    var dots = ns.map(function (n) { return '<circle cx="' + X(n.u) + '" cy="' + Y(n.v) + '" r="3.2" fill="var(--acc)"/>'; }).join('');
+    $('view').innerHTML = '<svg class="view" viewBox="0 0 ' + W + ' ' + H + '"><path d="' + pc + '" fill="none" stroke="#8a97a5" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/><path d="' + tp + '" fill="none" stroke="var(--acc)" stroke-width="2" stroke-dasharray="5 3"/>' + dots + '<text x="8" y="16" fill="#8a97a5" font-size="11">Z →</text><text x="8" y="30" fill="#8a97a5" font-size="11">X ↑</text></svg>';
+    $('viewCard').classList.remove('hide');
+  }
+  function unit(a, b) { var x = b[0] - a[0], y = b[1] - a[1], l = Math.hypot(x, y); return [x / l, y / l]; }
+
+  // ---------- события ----------
+  $('mC').onclick = function () { state.mode = 'C'; buildFields(); inputs._mode = 'C'; update(); };
+  $('mR').onclick = function () { if (parallelShape(state.shape)) return; state.mode = 'R'; buildFields(); inputs._mode = 'R'; update(); };
+  $('dirBtn').onclick = function () { state.dir = state.dir === 'fwd' ? 'rev' : 'fwd'; update(true); };
+  $('clear').onclick = function () { state.vals = {}; buildFields(); inputs._mode = state.mode; update(); };
+  $('copy').onclick = function () {
+    var text = $('gc').textContent, b = $('copy');
+    function done() { b.textContent = 'Скопировано'; setTimeout(function () { b.textContent = 'Копировать'; }, 1200); }
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, fallback); else fallback();
+    function fallback() { var ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); done(); } catch (e) {} document.body.removeChild(ta); }
+  };
+
+  buildPickers(); fixCombo(); buildFields(); inputs._mode = state.mode; update();
+  if ('serviceWorker' in navigator && location.protocol.indexOf('http') === 0) navigator.serviceWorker.register('sw.js').catch(function () {});
+})();
+
+</script>
+</body>
+</html>
